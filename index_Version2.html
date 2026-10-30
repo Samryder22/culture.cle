@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="Culture.CLE Book Club Map">
+  <meta name="theme-color" content="#faf8f4">
+  <title>Culture.CLE Book Club Map</title>
+  <style>
+    :root{
+      --bg:#faf8f4;
+      --fg:#1f2430;
+      --mut:#4b5260;
+      --card:#fff;
+      --bd:#cfcabd;
+      --link:#1a4fc4;
+      --focus:#1a4fc4;
+      --map:#fff;
+      --mapbd:#cfcabd;
+      --mapmut:#4b5260;
+      box-sizing:border-box;
+      padding-top:env(safe-area-inset-top,0px);
+      padding-bottom:env(safe-area-inset-bottom,0px);
+    }
+    @media (prefers-color-scheme: dark){
+      :root:not([data-theme="light"]){
+        --bg:#15171c;
+        --fg:#eceef2;
+        --mut:#b4bac6;
+        --card:#1e2128;
+        --bd:#4a4f5b;
+        --link:#9bbcff;
+        --focus:#9bbcff;
+        --map:#f3f1ec;
+        --mapbd:#4a4f5b;
+        --mapmut:#4b5260;
+        color-scheme:dark;
+      }
+    }
+    :root[data-theme="dark"]{
+      --bg:#15171c;
+      --fg:#eceef2;
+      --mut:#b4bac6;
+      --card:#1e2128;
+      --bd:#4a4f5b;
+      --link:#9bbcff;
+      --focus:#9bbcff;
+      --map:#f3f1ec;
+      --mapbd:#4a4f5b;
+      --mapmut:#4b5260;
+      color-scheme:dark;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--fg);
+      font:16px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;
+      padding:16px;
+      max-width:900px;
+      margin-inline:auto;
+      padding-left:max(16px,env(safe-area-inset-left,0px));
+      padding-right:max(16px,env(safe-area-inset-right,0px));
+    }
+    h1{font-size:1.4rem;margin:0 0 4px}
+    h2{font-size:1.1rem;margin:20px 0 8px}
+    h3{font-size:1rem;margin:16px 0 4px}
+    .sub,.meta{color:var(--mut)}
+    .sub{margin:0 0 12px}
+    .meta{font-size:.95rem}
+    #map{
+      width:100%;
+      height:min(62vw,420px);
+      min-height:250px;
+      background:var(--map);
+      border:1px solid var(--mapbd);
+      border-radius:12px;
+      overflow:hidden;
+    }
+    #map svg{width:100%;height:100%}
+    .legend{
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px 14px;
+      margin:12px 0;
+      padding:0;
+      list-style:none;
+    }
+    .legend li{display:flex;align-items:center;gap:6px}
+    .sw{
+      width:16px;
+      height:16px;
+      border-radius:4px;
+      display:inline-block;
+      border:1px solid var(--fg);
+    }
+    #panel{
+      background:var(--card);
+      border:1px solid var(--bd);
+      border-radius:12px;
+      padding:14px;
+      margin:12px 0;
+      min-height:64px;
+    }
+    .bk{
+      padding:10px 0;
+      border-top:1px solid var(--bd);
+    }
+    .bk:first-of-type{border-top:0}
+    a{
+      color:var(--link);
+      font-weight:600;
+      text-underline-offset:3px;
+    }
+    ul.chips{
+      list-style:none;
+      margin:0;
+      padding:0;
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+    }
+    .chip{
+      min-height:44px;
+      padding:8px 14px;
+      border-radius:10px;
+      border:1px solid var(--bd);
+      border-left-width:8px;
+      background:var(--card);
+      color:var(--fg);
+      font:inherit;
+      cursor:pointer;
+    }
+    .chip[aria-pressed="true"]{
+      outline:2px solid var(--fg);
+      outline-offset:1px;
+      font-weight:700;
+    }
+    a:focus-visible,button:focus-visible{
+      outline:3px solid var(--focus);
+      outline-offset:2px;
+    }
+    .sr{
+      position:absolute;
+      width:1px;
+      height:1px;
+      overflow:hidden;
+      clip:rect(0 0 0 0);
+      white-space:nowrap;
+    }
+    .jvm-container{
+      touch-action:none;
+      position:relative;
+      overflow:hidden;
+      height:100%;
+      width:100%;
+    }
+    #map svg{touch-action:none}
+    .jvm-tooltip{display:none}
+    @media (max-width:480px){
+      body{padding:12px}
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Culture.CLE Book Club Map</h1>
+    <p class="sub" id="sum"></p>
+    <p class="meta">
+      Select a country on the map or from the lists below to see its books.
+      Each country shows the color of the most recent year we read from it.
+      Keyboard and screen reader users: use the country lists below the map.
+    </p>
+
+    <div
+      id="map"
+      role="img"
+      aria-label="World map. Countries we have read books from are filled with a color for the year read. The country lists below the map hold the same information."
+    ></div>
+
+    <ul class="legend" id="legend" aria-label="Color key by year read"></ul>
+
+    <section id="panel" role="region" aria-label="Book details" aria-live="polite">
+      <span class="meta">No country selected yet.</span>
+    </section>
+
+    <h2>Countries by year read</h2>
+    <div id="lists"></div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/jsvectormap@1.5.3/dist/js/jsvectormap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsvectormap@1.5.3/dist/maps/world.js"></script>
+  <script>
+    var N={
+      MW:"Malawi",KR:"South Korea",JP:"Japan",CN:"China",MN:"Mongolia",IN:"India",
+      US:"United States",CY:"Cyprus",DK:"Denmark",GR:"Greece",DE:"Germany",EG:"Egypt",
+      LB:"Lebanon",NZ:"New Zealand",DO:"Dominican Republic",CL:"Chile",AQ:"Antarctica",
+      NG:"Nigeria",IT:"Italy",HU:"Hungary",BR:"Brazil",HR:"Croatia",MG:"Madagascar",
+      RU:"Russia",GT:"Guatemala",MX:"Mexico",PK:"Pakistan",KH:"Cambodia",IR:"Iran",
+      BW:"Botswana",CM:"Cameroon",CA:"Canada",PL:"Poland"
+    };
+
+    var B=[
+      ["The Boy Who Harnessed the Wind","William Kamkwamba",["MW"],"2019"],
+      ["Pachinko","Min Jin Lee",["KR","JP"],"2019"],
+      ["Snowflower and the Secret Fan","Lisa See",["CN"],"2024"],
+      ["The Secret History of the Mongol Queens","Jack Weatherford",["MN"],"2019"],
+      ["The Namesake","Jhumpa Lahiri",["IN","US"],"2023"],
+      ["The Island of Missing Trees","Elif Shafak",["CY"],"2023"],
+      ["The Little Book of Hygge","Meik Wiking",["DK"],"2024"],
+      ["Middlesex","Jeffrey Eugenides",["GR","US"],"2019"],
+      ["The Clown","Heinrich Böll",["DE"],"2019"],
+      ["Women at Point Zero","Nawal El Saadawi",["EG"],"2024"],
+      ["The Arsonist City","Hala Alyan",["LB"],"2024"],
+      ["Between the World and Me","Ta-Nehisi Coates",["US"],"2019"],
+      ["The Whale Rider","Witi Ihimaera",["NZ"],"2024"],
+      ["In the Time of Butterflies","Julia Alvarez",["DO"],"2019"],
+      ["House of Spirits","Isabel Allende",["CL"],"2024"],
+      ["How the Penguins Saved Veronica","Hazel Prior",["AQ"],"2025"],
+      ["There, There","Tommy Orange",["US"],"2024"],
+      ["Wahala","Nikki May",["NG"],"2024"],
+      ["My Brilliant Friend","Elena Ferrante",["IT"],"2024"],
+      ["Budapest Noir","Vilmos Kondor",["HU"],"2025"],
+      ["The Posthumous Memoirs of Brás Cubas","Machado de Assis",["BR"],"2025"],
+      ["The Cheesemaker’s Daughter","Kristin Vukovic",["HR"],"2025"],
+      ["Where the Wandering Ends","Yvette Manessis Corporon",["GR"],"2025","https://www.goodreads.com/book/show/59609071-where-the-wandering-ends"],
+      ["Beyond the Rice Fields","Naivo",["MG"],"2025"],
+      ["Becoming Baba Yaga","Kris Spisak",["RU"],"2025"],
+      ["I, Rigoberta Menchú","Rigoberta Menchú",["GT"],"2025"],
+      ["Convenience Store Woman","Sayaka Murata",["JP"],"2025"],
+      ["The No. 1 Ladies’ Detective Agency","Alexander McCall Smith",["BW"],"2026"],
+      ["Slow Noodles","Chantha Nguon",["KH"],"2026"],
+      ["The Lion Women of Tehran","Marjan Kamali",["IR"],"2026"],
+      ["Like Water for Chocolate","Laura Esquivel",["MX"],"2026"],
+      ["The Book of Everlasting Things","Aanchal Malhotra",["IN","PK"],"2026"],
+      ["The Door to Door Bookstore","Carsten Henn",["DE"],"2026"],
+      ["The Innocent Anthropologist","Nigel Barley",["CM"],"2026","https://www.goodreads.com/book/show/105161.The_Innocent_Anthropologist"],
+      ["Kinauvit","Norma Dunning",["CA"],"2026"],
+      ["Swimming in the Dark","Tomasz Jedrowski",["PL"],"2026","https://www.goodreads.com/book/show/49977811-swimming-in-the-dark"]
+    ];
+
+    var C={"2018":"#a8467f","2019":"#6b7a1a","2023":"#1a8a9a","2024":"#c77d00","2025":"#c4452d","2026":"#5b4bc4","?":"#6b7280"};
+    var ys=["2026","2025","2024","2023","2019","2018","?"];
+
+    function yl(y){
+      return y==="?" ? "Year not listed" : y;
+    }
+
+    var byC = {}, latest = {};
+    B.forEach(function(b){
+      b[2].forEach(function(c){
+        (byC[c]=byC[c]||[]).push(b);
+        var y = b[3], cur = latest[c];
+        if(!cur || cur==="?" || (y !== "?" && y > cur)) latest[c] = y;
+      });
+    });
+
+    var nC = Object.keys(latest).length;
+    document.getElementById("sum").textContent = B.length + " books read from " + nC + " countries and regions.";
+
+    function gr(b){
+      return b[4] || "https://www.goodreads.com/search?q=" + encodeURIComponent(b[0] + " " + b[1]);
+    }
+
+    var chips = [];
+
+    function show(c){
+      var bs = (byC[c] || []).slice().sort(function(a,b){
+        return a[3] === "?" ? 1 : b[3] === "?" ? -1 : b[3] - a[3];
+      });
+
+      document.getElementById("panel").innerHTML =
+        '<strong>' + N[c] + '</strong>' +
+        bs.map(function(b){
+          return '<div class="bk"><a href="' + gr(b) + '" target="_blank" rel="noopener">' + b[0] +
+            '<span class="sr"> on Goodreads (opens in a new tab)</span></a>' +
+            '<div class="meta">' + b[1] + ' · Read: ' + yl(b[3]).toLowerCase().replace("year not","year not") + '</div></div>';
+        }).join("");
+
+      chips.forEach(function(el){
+        el.setAttribute("aria-pressed", el.getAttribute("data-c") === c ? "true" : "false");
+      });
+
+      document.getElementById("panel").scrollIntoView({
+        behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+        block: "nearest"
+      });
+    }
+
+    document.getElementById("legend").innerHTML =
+      ys.filter(function(y){
+        return Object.keys(latest).some(function(c){ return latest[c] === y; });
+      }).map(function(y){
+        return '<li><span class="sw" style="background:' + C[y] + '" aria-hidden="true"></span>' + yl(y) + '</li>';
+      }).join("");
+
+    document.getElementById("lists").innerHTML = ys.map(function(y){
+      var cs = Object.keys(latest).filter(function(c){ return latest[c] === y; }).sort(function(a,b){
+        return N[a] < N[b] ? -1 : 1;
+      });
+
+      if(!cs.length) return "";
+      return '<h3>' + yl(y) + '</h3><ul class="chips">' + cs.map(function(c){
+        return '<li><button type="button" class="chip" aria-pressed="false" style="border-left-color:' + C[y] + '" data-c="' + c + '">' + N[c] + '</button></li>';
+      }).join("") + '</ul>';
+    }).join("");
+
+    chips = [].slice.call(document.querySelectorAll(".chip"));
+    chips.forEach(function(el){
+      el.addEventListener("click", function(){
+        show(el.getAttribute("data-c"));
+      });
+    });
+
+    try{
+      new jsVectorMap({
+        selector:"#map",
+        map:"world",
+        zoomButtons:false,
+        zoomOnScroll:false,
+        showTooltip:false,
+        regionStyle:{
+          initial:{fill:"none",stroke:"#8d897f","stroke-opacity":.45,"stroke-width":.4}
+        },
+        series:{
+          regions:[{
+            attribute:"fill",
+            values:latest,
+            scale:C
+          }]
+        },
+        onRegionClick:function(e, code){
+          if(byC[code]) show(code);
+        }
+      });
+    } catch(err){
+      document.getElementById("map").innerHTML =
+        '<p class="meta" style="padding:14px;color:var(--mapmut)">The map could not load. Use the country lists below.</p>';
+    }
+  </script>
+</body>
+</html>
